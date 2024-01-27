@@ -4,9 +4,14 @@ from urllib.parse import urljoin
 from tabulate import tabulate
 import random
 import poke_db
+import redis
+import json
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 URL = 'https://pokeapi.co/api/v2/'
-validated_names_cache = {}
+# test in local dev
+# validated_names_cache = {}
 
 
 def validate_name(order):
@@ -17,14 +22,20 @@ def validate_name(order):
     """
     for attempt in range(3):
         name = input("enter {0} pokemon name:".format(order))
-        if name in validated_names_cache:
-            return validated_names_cache[name]
+        # test in local dev
+        # if name in validated_names_cache:
+        #     return name, validated_names_cache[name]
+        cached_res = redis_client.get(name)
+        if cached_res:
+            return name, json.loads(cached_res)
         pokemon = 'pokemon/' + str(name)
         poke_url = urljoin(URL, pokemon)
         res = requests.get(url=poke_url)
 
         if res.status_code == http.HTTPStatus.OK:
-            validated_names_cache[name] = res
+            # test in local dev
+            # validated_names_cache[name] = res
+            redis_client.set(name, json.dumps(res.json()))
             return name, res
         else:
             print("Pokemon not found. Please check the spelling and try again.")
@@ -126,7 +137,6 @@ class Pokemon:
             result['types'].append(k['type']['name'])
 
         for l in poke_response['stats']:
-            # print(l['stat']['name'])
             result['stats'][str(l['stat']['name'])] = l['base_stat']
 
         for m in poke_response['forms']:
@@ -139,8 +149,12 @@ class Pokemon:
         This Function will give details of the attack moves
         """
         cache_key = f"{self.name}_{move_name}"
-        if cache_key in Pokemon._cache:
-            return Pokemon._cache[cache_key]
+        # test in local dev
+        # if cache_key in Pokemon._cache:
+        #     return Pokemon._cache[cache_key]
+        cached_output = redis_client.get(cache_key)
+        if cached_output:
+            return json.loads(cached_output)
 
         moves = 'move/' + str(move_name)
         moves_url = urljoin(URL, moves)
@@ -156,6 +170,8 @@ class Pokemon:
             "pp": moves_response['pp']
 
         }
-        Pokemon._cache[cache_key] = output
+        # test in local dev
+        # Pokemon._cache[cache_key] = output
+        redis_client.set(cache_key, json.dumps(output))
         return output
 
