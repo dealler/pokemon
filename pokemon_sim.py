@@ -1,55 +1,66 @@
 import poke_db
 from pokemon import Pokemon, validate_name
 
+BATTLE_START = "start"
+BATTLE_STOP = "stop"
 
-def battle_areana():
+
+def setup_battle():
     """
-    This function is battlefield for two pokemons they battle it out
-    by mentioning attacks and opponents and whose health gets below
-    their stats hp they loose
-
-    After executing the function you will be prompted to type the pokemon
-    names and then you should enter your attack name each time until ones health
-    is below their hp then battle state will be changed to stop and
-    while loop stops
-
+    Set up the battle by selecting two Pokémons.
     """
+    pokemon1 = select_pokemon("first")
+    if not pokemon1:
+        return None, None
 
+    pokemon2 = select_pokemon("second")
+    if not pokemon2:
+        return None, None
+
+    return pokemon1, pokemon2
+
+
+def select_pokemon(order):
+    """
+    Prompts the user to select a Pokémon.
+    """
+    name, res = validate_name(order)
+    if name is None:
+        return None
+    return Pokemon(name, res)
+
+
+def battle(pokemon1, pokemon2):
+    """
+    Conduct the battle between two Pokémons.
+    """
     battle_id = poke_db.get_new_battle_id()
+    battle_state = BATTLE_START
 
-    name, res = validate_name("first")
-    if name is None:
-        return
-    contender_1 = Pokemon(name, res)
+    while battle_state == BATTLE_START:
+        for attacker, defender in [(pokemon1, pokemon2), (pokemon2, pokemon1)]:
+            print(f"{attacker.name}'s turn.")
+            attacker.attack(battle_id, defender)
 
-    name, res = validate_name("second")
-    if name is None:
-        return
-    contender_2 = Pokemon(name, res)
+            if defender.health <= defender.hp:
+                print(f"{defender.name} is defeated. {attacker.name} wins!")
+                poke_db.update_winner(battle_id, attacker.name, defender.name)
+                return
 
-    battle_state = "start"
 
-    while battle_state == 'start':
-
-        print("{0} turn.".format(contender_1.name))
-        contender_1.attack(battle_id, contender_2)
-
-        print("{0} turn.".format(contender_2.name))
-        contender_2.attack(battle_id, contender_1)
-
-        if contender_1.health <= contender_1.hp:
-            print("{0} is dead. {1} is winner".format(contender_1.name, contender_2.name))
-            battle_state = "stop"
-            poke_db.update_winner(contender_2.name, contender_1.name, battle_id)
-
-        elif contender_2.health <= contender_2.hp:
-            print("{0} is dead. {1} is winner".format(contender_2.name, contender_1.name))
-            battle_state = "stop"
-            poke_db.update_winner(contender_1.name, contender_2.name, battle_id)
+def battle_arena():
+    """
+    This function is the battlefield for two Pokémon. They battle it out
+    by attacking each other. The battle continues until one Pokémon's health
+    falls below its hp.
+    """
+    pokemon1, pokemon2 = setup_battle()
+    if pokemon1 and pokemon2:
+        battle(pokemon1, pokemon2)
 
 
 if __name__ == "__main__":
     poke_db.setup_database()
     while True:
-        print("starting new Battle")
-        battle_areana()
+        print("Starting a new Battle")
+        battle_arena()
