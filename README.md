@@ -14,17 +14,14 @@ Before running the simulator, ensure you have Docker installed on your machine. 
    git clone https://github.com/dealler/pokemon.git
    cd pokemon
 
-2. **Build the Docker Image**
-   Build the Docker image using the provided Dockerfile. This step compiles all necessary components of the application into a Docker image.
 
-    ```bash
-    docker build -t pokemon-battle .
-3. **Run the Container**
-   Start a container from the image. This step runs the application inside the container.
+2. **Usage**
+   To use Docker Compose, you'll need to have Docker Compose installed. Then, you can start your application and Redis with the following command:
 
-    ```bash
-   docker run -it --rm pokemon-battle
-   
+   ```bash
+   docker-compose up
+This command builds your application's Docker image, pulls the Redis image if it's not already present, and starts both containers. Your application will be able to connect to the Redis server at redis:6379.   
+
 ## Usage
    Once the application is running inside the Docker container, follow the on-screen prompts to simulate Pokémon battles. You will be asked to enter the names of the Pokémon that will battle each other. The simulator will then proceed with the battle, displaying each move and its outcome.
 
