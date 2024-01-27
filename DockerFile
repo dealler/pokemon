@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Install the requests library
-RUN pip install --no-cache-dir requests
+# Install required libraries
+RUN pip install --no-cache-dir requests redis tabulate
 
 # Run the script when the container launches
 CMD ["python", "./pokemon_sim.py"]
