@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-import requests
+import json
 from unittest.mock import MagicMock
 
 from pokemon import Pokemon, validate_name
@@ -11,13 +11,34 @@ class TestPokemon(unittest.TestCase):
     def setUp(self):
         # Example response data to mock the API response
         self.mock_pokemon_data = {
-            "stats": {
-                "defense": 100,
-                "attack": 150
-            },
-            "moves": ["thunderbolt", "tackle"],
+            "abilities": [
+                {
+                    "ability": {"name": "static", "url": "https://pokeapi.co/api/v2/ability/9/"},
+                    "is_hidden": False,
+                    "slot": 1
+                },
+                {
+                    "ability": {"name": "lightning-rod", "url": "https://pokeapi.co/api/v2/ability/31/"},
+                    "is_hidden": True,
+                    "slot": 3
+                }
+            ],
+            "stats": [
+                {"stat": {"name": "defense", "url": "..."}, "base_stat": 100},
+                {"stat": {"name": "attack", "url": "..."}, "base_stat": 150}
+            ],
+            "height": 4,
+            "weight": 60,
+            "base_experience": 112,
+            "moves": [
+                {"move": {"name": "thunderbolt", "url": "https://pokeapi.co/api/v2/move/85/"}},
+                {"move": {"name": "mega-punch", "url": "https://pokeapi.co/api/v2/move/5/"}}
+            ],
+            "types": [{"type": {"name": "electric"}}],
+            "forms": [{"name": "pikachu"}],
             "name": "pikachu"
         }
+        self.mock_pokemon_data_byte = json.dumps(self.mock_pokemon_data)
 
     @patch('requests.get')
     def test_pokemon_initialization(self, mock_get):
@@ -37,9 +58,9 @@ class TestPokemon(unittest.TestCase):
     def test_damage_by_each_move(self, mock_get):
         """Test damage calculation for each move."""
         mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = {"power": 50, "pp": 15}
+        mock_get.return_value.json.return_value = self.mock_pokemon_data
 
-        pikachu = Pokemon("pikachu", MagicMock())
+        pikachu = Pokemon("pikachu", mock_get.return_value)
         damage = pikachu.damage_by_each_move("thunderbolt")
 
         self.assertEqual(damage, 50)
